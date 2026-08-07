@@ -19,13 +19,16 @@ import {
   normalizeGuess,
   pickWord,
   pushSystem,
+  revealRandomHintLetter,
   type InternalPlayer,
   type Room,
 } from './room.js';
 import { startBotDrawing } from './bot.js';
+import { categoryForWord } from '@it-is-what-is-it/shared';
 
 const PORT = Number(process.env.PORT ?? 3001);
 const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN ?? true;
+const VS_BOT_HINT_INTERVAL_MS = 30_000;
 const rooms = new Map<string, Room>();
 const socketToPlayer = new Map<string, { roomCode: string; playerId: string }>();
 
@@ -95,6 +98,7 @@ function startRound(room: Room) {
   const word = pickWord(room.usedWords);
   room.usedWords.add(word);
   room.secretWord = word;
+  room.hintRevealed = new Set();
   room.drawerId = drawer.id;
   room.phase = 'playing';
   room.roundEndsAt = Date.now() + room.settings.roundDurationSec * 1000;
@@ -103,6 +107,9 @@ function startRound(room: Room) {
   drawer.status = 'drawing';
 
   pushSystem(room, `Round ${room.currentRound}: ${drawer.name} is drawing!`);
+  if (room.vsBot) {
+    pushSystem(room, 'Hints unlock every 30s — category + a letter.');
+  }
   broadcastState(room);
   io.to(room.code).emit('draw:clear');
 
@@ -117,9 +124,31 @@ function startRound(room: Room) {
       strokePoint: (strokeId, point) => io.to(room.code).emit('draw:strokePoint', { strokeId, point }),
       strokeEnd: (strokeId) => io.to(room.code).emit('draw:strokeEnd', { strokeId }),
     });
+    scheduleVsBotHints(room);
   }
 
   room.roundTimer = setTimeout(() => endRound(room), room.settings.roundDurationSec * 1000);
+}
+
+/** Every 30s in vs-bot: announce category and reveal one letter in the hint. */
+function scheduleVsBotHints(room: Room) {
+  const tick = () => {
+    if (room.phase !== 'playing' || !room.vsBot || !room.secretWord) return;
+
+    const category = categoryForWord(room.secretWord);
+    pushSystem(room, `Category: ${category}`);
+
+    const letter = revealRandomHintLetter(room);
+    if (letter) {
+      pushSystem(room, `Letter revealed: "${letter.toUpperCase()}"`);
+    }
+
+    broadcastState(room);
+
+    room.botTimers.push(setTimeout(tick, VS_BOT_HINT_INTERVAL_MS));
+  };
+
+  room.botTimers.push(setTimeout(tick, VS_BOT_HINT_INTERVAL_MS));
 }
 
 function endRound(room: Room) {
@@ -330,6 +359,7 @@ io.on('connection', (socket) => {
     room.phase = 'lobby';
     room.drawerId = null;
     room.secretWord = null;
+    room.hintRevealed = new Set();
     room.roundEndsAt = null;
     room.strokes = [];
     room.currentRound = 0;

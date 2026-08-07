@@ -1,5 +1,6 @@
 import {
   DEFAULT_SETTINGS,
+  formatWordHint,
   type ChatMessage,
   type GamePhase,
   type PlayerPublic,
@@ -39,6 +40,8 @@ export interface Room {
   drawerId: string | null;
   roundEndsAt: number | null;
   secretWord: string | null;
+  /** Indexes of letters revealed in the public word hint (vs-bot progressive hints). */
+  hintRevealed: Set<number>;
   strokes: Stroke[];
   drawerHistory: string[];
   roundTimer: NodeJS.Timeout | null;
@@ -100,6 +103,7 @@ export function createRoom(
     drawerId: null,
     roundEndsAt: null,
     secretWord: null,
+    hintRevealed: new Set(),
     strokes: [],
     drawerHistory: [],
     roundTimer: null,
@@ -182,7 +186,8 @@ export function getPublicState(room: Room, _viewerId?: string): RoomPublicState 
     drawerId: room.drawerId,
     roundEndsAt: room.roundEndsAt,
     wordLength: word ? word.length : null,
-    wordHint: room.phase === 'playing' && word ? '_ '.repeat(word.length).trim() : null,
+    wordHint:
+      room.phase === 'playing' && word ? formatWordHint(word, room.hintRevealed) : null,
     revealedWord:
       (room.phase === 'roundResults' || room.phase === 'finalScoreboard') && word ? word : null,
     topGuessers,
@@ -235,6 +240,23 @@ export function chooseNextDrawer(room: Room): InternalPlayer | null {
 export function clearBotTimers(room: Room) {
   for (const t of room.botTimers) clearTimeout(t);
   room.botTimers = [];
+}
+
+/** Reveal one random still-hidden letter. Keeps at least one letter hidden. Returns revealed char or null. */
+export function revealRandomHintLetter(room: Room): string | null {
+  const word = room.secretWord;
+  if (!word || room.phase !== 'playing') return null;
+
+  const hidden = [...word]
+    .map((ch, i) => ({ ch, i }))
+    .filter(({ i }) => !room.hintRevealed.has(i));
+
+  // Always leave at least one letter for the player to figure out
+  if (hidden.length <= 1) return null;
+
+  const pick = hidden[Math.floor(Math.random() * hidden.length)]!;
+  room.hintRevealed.add(pick.i);
+  return pick.ch;
 }
 
 export function guesserPoints(placement: number): number {

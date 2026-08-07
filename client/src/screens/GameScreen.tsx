@@ -1,7 +1,10 @@
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { GameApi } from '../hooks/useGame';
 import { DrawingCanvas } from '../components/DrawingCanvas';
 import { ChatPanel } from '../components/ChatPanel';
 import { Leaderboard } from '../components/Leaderboard';
+import { WrongGuessMeme } from '../components/WrongGuessMeme';
+import { pickRandomFaahMeme, playFaah, preloadFaahAssets } from '../lib/faah';
 import { ResultsOverlay, useCountdown } from './ResultsOverlay';
 
 type Props = { game: GameApi };
@@ -12,9 +15,41 @@ function formatTime(sec: number) {
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
+type FaahState = {
+  memeSrc: string;
+} | null;
+
 export function GameScreen({ game }: Props) {
   const { state, secretWord, me, playerId, canDraw, canGuess } = game;
   const secondsLeft = useCountdown(state?.roundEndsAt ?? null);
+  const [faah, setFaah] = useState<FaahState>(null);
+  const lastMemeRef = useRef<string | null>(null);
+  const faahTokenRef = useRef(0);
+
+  useEffect(() => {
+    preloadFaahAssets();
+  }, []);
+
+  const onGuess = useCallback(
+    (text: string, done?: (result: { wrong: boolean }) => void) => {
+      game.sendGuess(text, (result) => {
+        if (result.wrong) {
+          const memeSrc = pickRandomFaahMeme(lastMemeRef.current);
+          lastMemeRef.current = memeSrc;
+          const token = ++faahTokenRef.current;
+          setFaah({ memeSrc });
+          void playFaah().then(() => {
+            // Clear only if this is still the active FAAHH reaction
+            if (faahTokenRef.current === token) setFaah(null);
+          });
+        }
+        done?.(result);
+      });
+    },
+    [game],
+  );
+
+  const clearFaah = useCallback(() => setFaah(null), []);
 
   if (!state) return null;
 
@@ -98,12 +133,17 @@ export function GameScreen({ game }: Props) {
         <ChatPanel
           messages={state.chat}
           canGuess={canGuess}
-          onGuess={game.sendGuess}
+          onGuess={onGuess}
           onChat={game.sendChat}
           lockedReason={lockedReason}
         />
       </div>
 
+      <WrongGuessMeme
+        show={faah != null}
+        memeSrc={faah?.memeSrc ?? null}
+        onDone={clearFaah}
+      />
       <ResultsOverlay game={game} />
     </div>
   );

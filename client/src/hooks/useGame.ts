@@ -183,14 +183,14 @@ export function useGame() {
   }, [socket]);
 
   const sendGuess = useCallback(
-    (text: string, done?: (correct: boolean) => void) => {
+    (text: string, done?: (result: { wrong: boolean }) => void) => {
       socket.emit('game:guess', { text }, (res) => {
         if (!res.ok) {
           setToast(res.error);
-          done?.(false);
+          done?.({ wrong: false });
           return;
         }
-        done?.(res.correct);
+        done?.({ wrong: !res.correct });
       });
     },
     [socket],

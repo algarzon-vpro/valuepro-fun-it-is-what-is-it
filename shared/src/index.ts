@@ -148,3 +148,79 @@ export const WORD_BANK = [
   'tornado', 'trampoline', 'umbrella', 'unicorn', 'vampire', 'volcano', 'waffle',
   'waterfall', 'whale', 'wizard', 'zeppelin', 'zipper', 'zombie',
 ] as const;
+
+/** Broad category labels used for vs-bot progressive hints. */
+export const WORD_CATEGORY: Record<(typeof WORD_BANK)[number], string> = {
+  astronaut: 'Space',
+  banana: 'Food',
+  bicycle: 'Vehicle',
+  cactus: 'Nature',
+  camera: 'Object',
+  castle: 'Place',
+  catapult: 'Object',
+  chameleon: 'Animal',
+  compass: 'Object',
+  dinosaur: 'Animal',
+  dolphin: 'Animal',
+  dragon: 'Fantasy',
+  earbuds: 'Object',
+  eclipse: 'Space',
+  elephant: 'Animal',
+  firefly: 'Animal',
+  flamingo: 'Animal',
+  galaxy: 'Space',
+  giraffe: 'Animal',
+  guitar: 'Music',
+  hamburger: 'Food',
+  helicopter: 'Vehicle',
+  iceberg: 'Nature',
+  jellyfish: 'Animal',
+  kangaroo: 'Animal',
+  lighthouse: 'Place',
+  meteor: 'Space',
+  microphone: 'Object',
+  mushroom: 'Nature',
+  octopus: 'Animal',
+  origami: 'Object',
+  penguin: 'Animal',
+  pizza: 'Food',
+  pyramid: 'Place',
+  rainbow: 'Nature',
+  robot: 'Tech',
+  rocket: 'Space',
+  saxophone: 'Music',
+  scuba: 'Activity',
+  seahorse: 'Animal',
+  skateboard: 'Vehicle',
+  spaceship: 'Space',
+  submarine: 'Vehicle',
+  suitcase: 'Object',
+  sunglasses: 'Object',
+  surfboard: 'Object',
+  telescope: 'Object',
+  tornado: 'Nature',
+  trampoline: 'Object',
+  umbrella: 'Object',
+  unicorn: 'Fantasy',
+  vampire: 'Fantasy',
+  volcano: 'Nature',
+  waffle: 'Food',
+  waterfall: 'Nature',
+  whale: 'Animal',
+  wizard: 'Fantasy',
+  zeppelin: 'Vehicle',
+  zipper: 'Object',
+  zombie: 'Fantasy',
+};
+
+export function categoryForWord(word: string): string {
+  return (WORD_CATEGORY as Record<string, string>)[word] ?? 'Mystery';
+}
+
+/** Build a spaced hint like "_ a _ _ _ _ _" from revealed letter indexes. */
+export function formatWordHint(word: string, revealed: ReadonlySet<number> | readonly boolean[]): string {
+  const chars = [...word];
+  const isRevealed = (i: number) =>
+    revealed instanceof Set ? revealed.has(i) : Boolean((revealed as readonly boolean[])[i]);
+  return chars.map((ch, i) => (isRevealed(i) ? ch : '_')).join(' ');
+}

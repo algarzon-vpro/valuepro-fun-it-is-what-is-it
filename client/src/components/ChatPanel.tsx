@@ -4,7 +4,7 @@ import type { ChatMessage } from '@it-is-what-is-it/shared';
 type Props = {
   messages: ChatMessage[];
   canGuess: boolean;
-  onGuess: (text: string, done?: (correct: boolean) => void) => void;
+  onGuess: (text: string, done?: (result: { wrong: boolean }) => void) => void;
   lockedReason: string | null;
   onChat?: (text: string) => void;
 };
@@ -26,7 +26,9 @@ export function ChatPanel({ messages, canGuess, onGuess, lockedReason, onChat }:
     const value = text.trim();
     if (!value) return;
     if (canGuess) {
-      onGuess(value, () => setText(''));
+      onGuess(value, () => {
+        setText('');
+      });
     } else if (onChat) {
       onChat(value);
       setText('');
