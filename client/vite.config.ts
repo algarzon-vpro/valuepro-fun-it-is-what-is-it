@@ -12,6 +12,10 @@ export default defineConfig({
       '@it-is-what-is-it/shared': path.resolve(root, '../shared/src/index.ts'),
     },
   },
+  build: {
+    // Avoid lightningcss native binaries (breaks Linux CI when lockfile is Darwin-generated)
+    cssMinify: 'esbuild',
+  },
   server: {
     port: 5173,
     proxy: {

@@ -16,9 +16,7 @@
   },
   "devDependencies": {
     "concurrently": "^9.1.2",
-    "typescript": "^5.8.2",
-    "vercel": "^58.7.1",
-    "@railway/cli": "^4.5.2"
+    "typescript": "^5.8.2"
   },
   "engines": {
     "node": ">=20"
