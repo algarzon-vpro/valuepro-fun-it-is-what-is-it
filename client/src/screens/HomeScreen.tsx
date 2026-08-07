@@ -1,18 +1,18 @@
 import { useState, type FormEvent } from 'react';
-import { DEFAULT_SETTINGS, type RoomSettings } from '@sinetch/shared';
+import { DEFAULT_SETTINGS, type RoomSettings } from '@it-is-what-is-it/shared';
 import type { GameApi } from '../hooks/useGame';
 
 type Props = { game: GameApi };
 
 export function HomeScreen({ game }: Props) {
-  const [name, setName] = useState(() => localStorage.getItem('sinetch-itey.name') ?? '');
+  const [name, setName] = useState(() => localStorage.getItem('it-is-what-is-it.name') ?? '');
   const [code, setCode] = useState('');
   const [showHowTo, setShowHowTo] = useState(false);
   const [settings, setSettings] = useState<RoomSettings>({ ...DEFAULT_SETTINGS });
 
   const persistName = (value: string) => {
     setName(value);
-    localStorage.setItem('sinetch-itey.name', value);
+    localStorage.setItem('it-is-what-is-it.name', value);
   };
 
   const requireName = () => {

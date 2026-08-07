@@ -10,7 +10,7 @@ import {
   type RoundResultEntry,
   type Stroke,
   WORD_BANK,
-} from '@sinetch/shared';
+} from '@it-is-what-is-it/shared';
 import { randomUUID } from 'node:crypto';
 
 export interface InternalPlayer {

@@ -11,3 +11,4 @@ shared/dist
 .vite
 .vercel
 .railway
+.env*

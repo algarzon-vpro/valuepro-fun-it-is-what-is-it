@@ -9,7 +9,7 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      '@sinetch/shared': path.resolve(root, '../shared/src/index.ts'),
+      '@it-is-what-is-it/shared': path.resolve(root, '../shared/src/index.ts'),
     },
   },
   server: {

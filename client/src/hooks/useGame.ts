@@ -5,10 +5,10 @@ import type {
   RoomSettings,
   Stroke,
   StrokePoint,
-} from '@sinetch/shared';
+} from '@it-is-what-is-it/shared';
 import { getSocket } from '../lib/socket';
 
-const SESSION_KEY = 'sinetch-itey.session';
+const SESSION_KEY = 'it-is-what-is-it.session';
 
 interface Session {
   code: string;

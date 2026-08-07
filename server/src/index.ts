@@ -7,7 +7,7 @@ import type {
   ClientToServerEvents,
   ServerToClientEvents,
   Stroke,
-} from '@sinetch/shared';
+} from '@it-is-what-is-it/shared';
 import {
   canJoinAsPlayer,
   chooseNextDrawer,

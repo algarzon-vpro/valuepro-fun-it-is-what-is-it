@@ -17,7 +17,7 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "paths": {
-      "@sinetch/shared": ["../shared/src/index.ts"]
+      "@it-is-what-is-it/shared": ["../shared/src/index.ts"]
     }
   },
   "include": ["src"]

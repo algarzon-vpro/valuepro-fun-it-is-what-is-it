@@ -85,7 +85,7 @@ Vercel can do WebSockets now, but each connection can land on a **different func
 ## Project layout
 
 ```
-sinetch-itey/
+it-is-what-is-it/
   client/   React UI → Vercel
   server/   Socket.IO game server → Railway / Render / Fly
   shared/   Shared types & word list

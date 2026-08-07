@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
-import type { ChatMessage } from '@sinetch/shared';
+import type { ChatMessage } from '@it-is-what-is-it/shared';
 
 type Props = {
   messages: ChatMessage[];

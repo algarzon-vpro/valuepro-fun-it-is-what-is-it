@@ -1,5 +1,5 @@
 import { io, type Socket } from 'socket.io-client';
-import type { ClientToServerEvents, ServerToClientEvents } from '@sinetch/shared';
+import type { ClientToServerEvents, ServerToClientEvents } from '@it-is-what-is-it/shared';
 
 export type AppSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 

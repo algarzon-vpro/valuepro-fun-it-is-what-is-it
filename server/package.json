@@ -1,5 +1,5 @@
 {
-  "name": "@sinetch/server",
+  "name": "@it-is-what-is-it/server",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -11,10 +11,10 @@
     "dev:once": "tsx src/index.ts"
   },
   "dependencies": {
-    "@sinetch/shared": "*",
     "cors": "^2.8.5",
     "express": "^4.21.2",
-    "socket.io": "^4.8.1"
+    "socket.io": "^4.8.1",
+    "@it-is-what-is-it/shared": "*"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",

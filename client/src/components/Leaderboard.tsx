@@ -1,4 +1,4 @@
-import type { PlayerPublic } from '@sinetch/shared';
+import type { PlayerPublic } from '@it-is-what-is-it/shared';
 
 type TopGuesser = { playerId: string; playerName: string; placement: number };
 

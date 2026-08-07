@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
-import type { Stroke, StrokePoint } from '@sinetch/shared';
+import type { Stroke, StrokePoint } from '@it-is-what-is-it/shared';
 
 const COLORS = ['#111111', '#ffffff', '#ff2bd6', '#2de2e6', '#8b5cff', '#ff8a3d', '#b8ff3d', '#ff5e7a', '#f5e6a8', '#3b82f6'];
 const SIZES = [3, 6, 10, 16, 24];
