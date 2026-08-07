@@ -38,12 +38,17 @@ function PlayerRows({
           <div>
             <div className="name">
               {p.name}
+              {p.isBot && (
+                <span className="badge" style={{ marginLeft: '0.35rem' }}>
+                  Bot
+                </span>
+              )}
               {hostId && p.id === hostId && (
                 <span className="badge orange" style={{ marginLeft: '0.35rem' }}>
                   Host
                 </span>
               )}
-              {!p.connected && (
+              {!p.connected && !p.isBot && (
                 <span className="badge" style={{ marginLeft: '0.35rem', opacity: 0.6 }}>
                   Offline
                 </span>
@@ -58,7 +63,7 @@ function PlayerRows({
           </div>
           <div style={{ textAlign: 'right' }}>
             <div className="score">{p.score}</div>
-            {isHost && onKick && hostId && p.id !== hostId && (
+            {isHost && onKick && hostId && p.id !== hostId && !p.isBot && (
               <button type="button" className="kick-btn" onClick={() => onKick(p.id)}>
                 Kick
               </button>

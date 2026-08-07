@@ -11,6 +11,7 @@ import type {
 import {
   canJoinAsPlayer,
   chooseNextDrawer,
+  clearBotTimers,
   createRoom,
   drawerBonus,
   getPublicState,
@@ -21,6 +22,7 @@ import {
   type InternalPlayer,
   type Room,
 } from './room.js';
+import { startBotDrawing } from './bot.js';
 
 const PORT = Number(process.env.PORT ?? 3001);
 const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN ?? true;
@@ -59,6 +61,7 @@ function clearTimers(room: Room) {
     clearTimeout(room.resultsTimer);
     room.resultsTimer = null;
   }
+  clearBotTimers(room);
 }
 
 function resetRoundFlags(room: Room) {
@@ -106,6 +109,14 @@ function startRound(room: Room) {
   if (drawer.socketId) {
     io.to(drawer.socketId).emit('game:secretWord', { word });
     io.to(drawer.socketId).emit('draw:sync', { strokes: [] });
+  }
+
+  if (drawer.isBot) {
+    startBotDrawing(room, word, {
+      strokeStart: (stroke) => io.to(room.code).emit('draw:strokeStart', { stroke }),
+      strokePoint: (strokeId, point) => io.to(room.code).emit('draw:strokePoint', { strokeId, point }),
+      strokeEnd: (strokeId) => io.to(room.code).emit('draw:strokeEnd', { strokeId }),
+    });
   }
 
   room.roundTimer = setTimeout(() => endRound(room), room.settings.roundDurationSec * 1000);
@@ -158,16 +169,30 @@ io.on('connection', (socket) => {
     const name = payload?.name?.trim();
     if (!name) return ack({ ok: false, error: 'Enter a name' });
 
-    let created = createRoom(name, payload.settings);
+    const vsBot = Boolean(payload.vsBot);
+    let created = createRoom(name, payload.settings, vsBot);
     while (rooms.has(created.room.code)) {
-      created = createRoom(name, payload.settings);
+      created = createRoom(name, payload.settings, vsBot);
     }
     const { room, host } = created;
     host.socketId = socket.id;
     rooms.set(room.code, room);
     socket.join(room.code);
     bindSocket(socket.id, room.code, host.id);
-    pushSystem(room, `${host.name} created the room.`);
+    pushSystem(
+      room,
+      vsBot
+        ? `${host.name} started a vs bot match. SketchBot will draw — you guess!`
+        : `${host.name} created the room.`,
+    );
+
+    if (vsBot) {
+      room.currentRound = 0;
+      room.drawerHistory = [];
+      room.usedWords = new Set();
+      startRound(room);
+    }
+
     ack({ ok: true, playerId: host.id, state: getPublicState(room, host.id) });
   });
 
@@ -191,6 +216,7 @@ io.on('connection', (socket) => {
       socketId: socket.id,
       isSpectator: asSpectator,
       roundPoints: 0,
+      isBot: false,
     };
 
     room.players.set(player.id, player);
@@ -259,6 +285,7 @@ io.on('connection', (socket) => {
 
     const target = room.players.get(payload.playerId);
     if (!target) return ack({ ok: false, error: 'Player not found' });
+    if (target.isBot) return ack({ ok: false, error: 'Cannot kick the bot' });
     if (target.socketId) {
       io.to(target.socketId).emit('error:toast', { message: 'You were kicked from the room.' });
       io.sockets.sockets.get(target.socketId)?.leave(room.code);

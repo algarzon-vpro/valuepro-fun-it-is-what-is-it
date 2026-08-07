@@ -25,6 +25,7 @@ export interface InternalPlayer {
   socketId: string | null;
   isSpectator: boolean;
   roundPoints: number;
+  isBot: boolean;
 }
 
 export interface Room {
@@ -43,6 +44,8 @@ export interface Room {
   roundTimer: NodeJS.Timeout | null;
   resultsTimer: NodeJS.Timeout | null;
   usedWords: Set<string>;
+  vsBot: boolean;
+  botTimers: NodeJS.Timeout[];
 }
 
 const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -68,6 +71,7 @@ export function pickWord(used: Set<string>): string {
 export function createRoom(
   hostName: string,
   settings?: Partial<RoomSettings>,
+  vsBot = false,
 ): { room: Room; host: InternalPlayer } {
   const hostId = randomUUID();
   const host: InternalPlayer = {
@@ -82,6 +86,7 @@ export function createRoom(
     socketId: null,
     isSpectator: false,
     roundPoints: 0,
+    isBot: false,
   };
 
   const room: Room = {
@@ -100,9 +105,33 @@ export function createRoom(
     roundTimer: null,
     resultsTimer: null,
     usedWords: new Set(),
+    vsBot,
+    botTimers: [],
   };
 
+  if (vsBot) {
+    const bot = createBotPlayer();
+    room.players.set(bot.id, bot);
+  }
+
   return { room, host };
+}
+
+export function createBotPlayer(): InternalPlayer {
+  return {
+    id: randomUUID(),
+    name: 'SketchBot',
+    score: 0,
+    isHost: false,
+    role: 'guesser',
+    status: 'lobby',
+    guessPlacement: null,
+    connected: true,
+    socketId: null,
+    isSpectator: false,
+    roundPoints: 0,
+    isBot: true,
+  };
 }
 
 function activePlayers(room: Room): InternalPlayer[] {
@@ -123,6 +152,7 @@ function toPublicPlayer(p: InternalPlayer): PlayerPublic {
     status: p.status,
     guessPlacement: p.guessPlacement,
     connected: p.connected,
+    isBot: p.isBot,
   };
 }
 
@@ -164,6 +194,7 @@ export function getPublicState(room: Room, _viewerId?: string): RoomPublicState 
             .map((p) => ({ playerId: p.id, playerName: p.name, score: p.score }))
         : null,
     canJoinAsPlayer: canJoinAsPlayer(room),
+    vsBot: room.vsBot,
   };
 }
 
@@ -179,16 +210,31 @@ export function pushSystem(room: Room, text: string): ChatMessage {
 }
 
 export function chooseNextDrawer(room: Room): InternalPlayer | null {
-  const roster = activePlayers(room).filter((p) => p.connected);
+  const roster = activePlayers(room).filter((p) => p.connected || p.isBot);
   if (roster.length === 0) return null;
 
-  const remaining = roster.filter((p) => !room.drawerHistory.includes(p.id));
-  const pool = remaining.length > 0 ? remaining : roster;
+  if (room.vsBot) {
+    const bot = roster.find((p) => p.isBot);
+    if (bot) {
+      room.drawerHistory.push(bot.id);
+      return bot;
+    }
+  }
+
+  const humans = roster.filter((p) => !p.isBot);
+  const poolSource = humans.length > 0 ? humans : roster;
+  const remaining = poolSource.filter((p) => !room.drawerHistory.includes(p.id));
+  const pool = remaining.length > 0 ? remaining : poolSource;
   if (remaining.length === 0) room.drawerHistory = [];
 
   const drawer = pool[Math.floor(Math.random() * pool.length)]!;
   room.drawerHistory.push(drawer.id);
   return drawer;
+}
+
+export function clearBotTimers(room: Room) {
+  for (const t of room.botTimers) clearTimeout(t);
+  room.botTimers = [];
 }
 
 export function guesserPoints(placement: number): number {

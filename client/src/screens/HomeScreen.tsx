@@ -29,6 +29,11 @@ export function HomeScreen({ game }: Props) {
     game.createRoom(name.trim(), settings);
   };
 
+  const onVsBot = () => {
+    if (!requireName()) return;
+    game.createRoom(name.trim(), { ...settings, maxPlayers: 2 }, true);
+  };
+
   const onJoin = (e: FormEvent) => {
     e.preventDefault();
     if (!requireName()) return;
@@ -52,7 +57,7 @@ export function HomeScreen({ game }: Props) {
     <div className="menu-overlay">
       <div className="menu-card">
         <h1 className="brand">It is what is it?</h1>
-        <p className="tagline">Draw it. Guess it. Neon glory.</p>
+        <p className="tagline">Draw it. Guess it. That&apos;s it.</p>
 
         <label className="menu-field">
           Player name
@@ -110,6 +115,15 @@ export function HomeScreen({ game }: Props) {
           </button>
         </form>
 
+        <button
+          type="button"
+          className="menu-btn"
+          disabled={!game.connected}
+          onClick={onVsBot}
+        >
+          Play vs Bot
+        </button>
+
         <div className="menu-divider">or enter a code</div>
 
         <form onSubmit={onJoin}>
@@ -138,7 +152,7 @@ export function HomeScreen({ game }: Props) {
         {showHowTo && (
           <div className="howto">
             <ol>
-              <li>One player is randomly chosen as the drawer.</li>
+              <li>One player is randomly chosen as the drawer — or play vs Bot and always guess.</li>
               <li>Only the drawer sees the secret word.</li>
               <li>Guessers type answers in chat — correct guesses stay secret.</li>
               <li>Score by guess order; drawer gets a bonus for successful reveals.</li>

@@ -110,9 +110,9 @@ export function useGame() {
   }, [socket]);
 
   const createRoom = useCallback(
-    (name: string, settings?: Partial<RoomSettings>) => {
+    (name: string, settings?: Partial<RoomSettings>, vsBot = false) => {
       setError(null);
-      socket.emit('room:create', { name, settings }, (res) => {
+      socket.emit('room:create', { name, settings, vsBot }, (res) => {
         if (!res.ok) {
           setError(res.error);
           return;
@@ -122,7 +122,7 @@ export function useGame() {
         setPlayerId(res.playerId);
         setState(res.state);
         setScreen('room');
-        setStrokes([]);
+        setStrokes(res.state.phase === 'playing' ? [] : []);
       });
     },
     [socket],

@@ -23,6 +23,7 @@ export interface PlayerPublic {
   status: PlayerStatus;
   guessPlacement: number | null;
   connected: boolean;
+  isBot: boolean;
 }
 
 export interface ChatMessage {
@@ -60,6 +61,7 @@ export interface RoomPublicState {
   roundResults: RoundResultEntry[] | null;
   finalScores: Array<{ playerId: string; playerName: string; score: number }> | null;
   canJoinAsPlayer: boolean;
+  vsBot: boolean;
 }
 
 export interface StrokePoint {
@@ -85,7 +87,7 @@ export type Ack<T extends object = object> =
 
 export type ClientToServerEvents = {
   'room:create': (
-    payload: { name: string; settings?: Partial<RoomSettings> },
+    payload: { name: string; settings?: Partial<RoomSettings>; vsBot?: boolean },
     ack: (res: Ack<{ playerId: string; state: RoomPublicState }>) => void,
   ) => void;
   'room:join': (
